@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% block title %}Register - NLP to No-SQL{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <i class="fas fa-user-plus fa-3x text-primary mb-3"></i>
+                    <h2 class="card-title fw-bold">Create Account</h2>
+                    <p class="text-muted">Join NLP Query Assistant today</p>
+                </div>
+                
+                <form method="post" novalidate class="needs-validation" id="registerForm">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-4">
+                        <div class="form-floating">
+                            {{ form.username(class="form-control", id="username", placeholder="Username", autocomplete="username") }}
+                            {{ form.username.label(for="username") }}
+                        </div>
+                        <div class="form-text">Username must be 3-20 characters long.</div>
+                        {% for error in form.username.errors %}
+                        <div class="invalid-feedback d-block">
+                            <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="form-floating">
+                            {{ form.email(class="form-control", id="email", placeholder="Email", autocomplete="email") }}
+                            {{ form.email.label(for="email") }}
+                        </div>
+                        {% for error in form.email.errors %}
+                        <div class="invalid-feedback d-block">
+                            <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="form-floating">
+                            {{ form.password(class="form-control", id="password", placeholder="Password", autocomplete="new-password") }}
+                            {{ form.password.label(for="password") }}
+                        </div>
+                        <div id="passwordStrength" class="mt-2">
+                            <div class="progress" style="height: 5px;">
+                                <div class="progress-bar bg-danger" role="progressbar" style="width: 0%;" id="passwordStrengthBar"></div>
+                            </div>
+                            <small class="form-text" id="passwordStrengthText">Password strength: Too weak</small>
+                        </div>
+                        <div class="form-text">
+                            <ul class="mb-0 ps-3 mt-1">
+                                <li>At least 8 characters</li>
+                                <li>Include uppercase and lowercase letters</li>
+                                <li>Include numbers and special characters</li>
+                            </ul>
+                        </div>
+                        {% for error in form.password.errors %}
+                        <div class="invalid-feedback d-block">
+                            <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="form-floating">
+                            {{ form.password2(class="form-control", id="password2", placeholder="Confirm Password", autocomplete="new-password") }}
+                            {{ form.password2.label(for="password2") }}
+                        </div>
+                        <div id="passwordMatch" class="form-text"></div>
+                        {% for error in form.password2.errors %}
+                        <div class="invalid-feedback d-block">
+                            <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-grid gap-2 mb-4">
+                        {{ form.submit(class="btn btn-primary btn-lg", id="submitBtn") }}
+                    </div>
+                    
+                    <div class="text-center">
+                        <p class="mb-0">Already have an account? <a href="{{ url_for('main.login') }}" class="text-primary fw-bold">Sign In</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('registerForm');
+        const password = document.getElementById('password');
+        const password2 = document.getElementById('password2');
+        const passwordStrengthBar = document.getElementById('passwordStrengthBar');
+        const passwordStrengthText = document.getElementById('passwordStrengthText');
+        const passwordMatch = document.getElementById('passwordMatch');
+        const submitBtn = document.getElementById('submitBtn');
+        const email = document.getElementById('email');
+        
+        // Password strength checker
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            
+            // Length check
+            if (password.length >= 8) strength += 1;
+            if (password.length >= 12) strength += 1;
+            
+            // Complexity checks
+            if (/[A-Z]/.test(password)) strength += 1;  // Has uppercase
+            if (/[a-z]/.test(password)) strength += 1;  // Has lowercase
+            if (/[0-9]/.test(password)) strength += 1;  // Has number
+            if (/[^A-Za-z0-9]/.test(password)) strength += 1;  // Has special char
+            
+            return strength;
+        }
+        
+        // Update password strength indicator
+        password.addEventListener('input', function() {
+            const strength = checkPasswordStrength(this.value);
+            let width = (strength / 6) * 100;
+            let bgClass = 'bg-danger';
+            let text = 'Too weak';
+            
+            if (strength >= 1 && strength <= 2) {
+                bgClass = 'bg-danger';
+                text = 'Weak';
+            } else if (strength >= 3 && strength <= 4) {
+                bgClass = 'bg-warning';
+                text = 'Medium';
+            } else if (strength == 5) {
+                bgClass = 'bg-info';
+                text = 'Strong';
+            } else if (strength >= 6) {
+                bgClass = 'bg-success';
+                text = 'Very strong';
+            }
+            
+            passwordStrengthBar.className = passwordStrengthBar.className.replace(/bg-\w+/, bgClass);
+            passwordStrengthBar.style.width = width + '%';
+            passwordStrengthText.textContent = 'Password strength: ' + text;
+            
+            // Check password match
+            if (password2.value) {
+                checkPasswordMatch();
+            }
+        });
+        
+        // Check if passwords match
+        function checkPasswordMatch() {
+            if (password.value === password2.value) {
+                passwordMatch.innerHTML = '<i class="fas fa-check-circle text-success"></i> Passwords match';
+                password2.classList.remove('is-invalid');
+                password2.classList.add('is-valid');
+                return true;
+            } else {
+                passwordMatch.innerHTML = '<i class="fas fa-times-circle text-danger"></i> Passwords do not match';
+                password2.classList.remove('is-valid');
+                password2.classList.add('is-invalid');
+                return false;
+            }
+        }
+        
+        // Check password match on input
+        password2.addEventListener('input', checkPasswordMatch);
+        
+        // Email validation
+        function validateEmail(email) {
+            const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            return re.test(email);
+        }
+        
+        email.addEventListener('blur', function() {
+            if (this.value && !validateEmail(this.value)) {
+                this.classList.add('is-invalid');
+                if (!this.nextElementSibling || !this.nextElementSibling.classList.contains('invalid-feedback')) {
+                    const feedback = document.createElement('div');
+                    feedback.className = 'invalid-feedback d-block';
+                    feedback.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>Please enter a valid email address.';
+                    this.parentNode.appendChild(feedback);
+                }
+            } else {
+                this.classList.remove('is-invalid');
+                if (this.nextElementSibling && this.nextElementSibling.classList.contains('invalid-feedback')) {
+                    this.nextElementSibling.remove();
+                }
+                if (this.value) {
+                    this.classList.add('is-valid');
+                }
+            }
+        });
+        
+        // Form submission validation
+        form.addEventListener('submit', function(event) {
+            let isValid = true;
+            
+            // Check email
+            if (email.value && !validateEmail(email.value)) {
+                isValid = false;
+                email.classList.add('is-invalid');
+            }
+            
+            // Check password strength
+            if (password.value && checkPasswordStrength(password.value) < 3) {
+                isValid = false;
+                password.classList.add('is-invalid');
+                if (!password.nextElementSibling || !password.nextElementSibling.classList.contains('invalid-feedback')) {
+                    const feedback = document.createElement('div');
+                    feedback.className = 'invalid-feedback d-block';
+                    feedback.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>Password is too weak.';
+                    passwordStrength.parentNode.appendChild(feedback);
+                }
+            }
+            
+            // Check password match
+            if (password.value !== password2.value) {
+                isValid = false;
+            }
+            
+            if (!isValid) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        });
+    });
+</script>
+{% endblock %}

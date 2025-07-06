@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Select Collection - NLP to No-SQL{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <i class="fas fa-database fa-3x text-primary mb-3"></i>
+                    <h2 class="card-title fw-bold">Select a Collection</h2>
+                    <p class="text-muted">Choose a database collection to work with</p>
+                </div>
+                
+                <form method="post" action="{{ url_for('main.select_collection') }}">
+                    <div class="mb-4">
+                        <label for="collection" class="form-label visually-hidden">Available Collections</label>
+                        <select name="collection" id="collection" class="form-select form-select-lg" required>
+                            <option value="" selected disabled>-- Select a Collection --</option>
+                            {% for collection in collections %}
+                            <option value="{{ collection }}">{{ collection }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div id="collection-info" class="mb-4 d-none">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-info-circle me-2"></i>Collection Info
+                                </h5>
+                                <div id="collection-details">
+                                    <!-- Will be populated with AJAX -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-check-circle me-2"></i>Continue with Selected Collection
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const collectionSelect = document.getElementById('collection');
+        const collectionInfo = document.getElementById('collection-info');
+        const collectionDetails = document.getElementById('collection-details');
+        
+        // Animate selection change
+        collectionSelect.addEventListener('change', function() {
+            if (this.value) {
+                // You can add AJAX call here to get collection info
+                // For now, we'll just show a simple message
+                
+                collectionDetails.innerHTML = `
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span>Loading collection information...</span>
+                    </div>
+                `;
+                
+                collectionInfo.classList.remove('d-none');
+                
+                // Simulate AJAX call
+                setTimeout(function() {
+                    collectionDetails.innerHTML = `
+                        <p class="mb-1"><strong>Collection:</strong> ${collectionSelect.value}</p>
+                        <p class="mb-1"><strong>Document Count:</strong> <span class="badge bg-primary">Loading...</span></p>
+                        <p class="mb-0"><strong>Status:</strong> <span class="badge bg-success">Available</span></p>
+                    `;
+                    
+                    // Add animation for number counting
+                    const countBadge = collectionDetails.querySelector('.badge.bg-primary');
+                    let count = 0;
+                    const finalCount = Math.floor(Math.random() * 10000) + 100;
+                    const interval = setInterval(function() {
+                        count += Math.floor(finalCount / 20);
+                        if (count >= finalCount) {
+                            clearInterval(interval);
+                            count = finalCount;
+                        }
+                        countBadge.textContent = count.toLocaleString();
+                    }, 50);
+                    
+                }, 800);
+            } else {
+                collectionInfo.classList.add('d-none');
+            }
+        });
+    });
+</script>
+{% endblock %}

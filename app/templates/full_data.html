@@ -1,0 +1,539 @@
+{% extends "base.html" %}
+{% block title %}Full Data View{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="card-title mb-0">
+                <i class="fas fa-table me-2"></i>Data Explorer
+            </h3>
+            <a href="{{ url_for('main.index') }}" class="btn btn-outline-primary btn-sm" id="backBtn">
+                <i class="fas fa-arrow-left me-1"></i>Back to Chat
+            </a>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs" id="dataTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="table-tab" data-bs-toggle="tab" data-bs-target="#table" type="button" role="tab" aria-controls="table" aria-selected="true">
+                <i class="fas fa-list me-2"></i>Table View
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="viz-tab" data-bs-toggle="tab" data-bs-target="#visualization" type="button" role="tab" aria-controls="visualization" aria-selected="false">
+                <i class="fas fa-chart-bar me-2"></i>Visualization
+            </button>
+        </li>
+    </ul>
+    
+    <div class="tab-content py-3" id="dataTabsContent">
+        <!-- Table Tab -->
+        <div class="tab-pane fade show active" id="table" role="tabpanel" aria-labelledby="table-tab">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" id="searchInput" class="form-control" placeholder="Search...">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select id="sortField" class="form-select">
+                                <option value="" selected disabled>Sort by field</option>
+                                {% for column in columns %}
+                                    <option value="{{ loop.index0 }}">{{ column }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select id="sortOrder" class="form-select">
+                                <option value="asc">Ascending</option>
+                                <option value="desc">Descending</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        {{ table | safe }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Visualization Tab -->
+        <div class="tab-pane fade" id="visualization" role="tabpanel" aria-labelledby="viz-tab">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-sliders me-2"></i>Visualization Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="vizForm">
+                                <!-- Chart Type Selection -->
+                                <div class="mb-3">
+                                    <label for="chartType" class="form-label">Chart Type</label>
+                                    <select class="form-select" id="chartType">
+                                        <option value="bar">Bar Chart</option>
+                                        <option value="line">Line Chart</option>
+                                        <option value="scatter">Scatter Plot</option>
+                                        <option value="pie">Pie Chart</option>
+                                        <option value="doughnut">Doughnut Chart</option>
+                                        <option value="radar">Radar Chart</option>
+                                        <option value="polarArea">Polar Area</option>
+                                        <option value="bubble">Bubble Chart</option>
+                                    </select>
+                                </div>
+
+                                <!-- Data Selection -->
+                                <div class="mb-3">
+                                    <label for="xAxis" class="form-label">X-Axis</label>
+                                    <select class="form-select" id="xAxis"></select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="yAxis" class="form-label">Y-Axis</label>
+                                    <select class="form-select" id="yAxis"></select>
+                                </div>
+
+                                <!-- Aggregation Options -->
+                                <div class="mb-3">
+                                    <label for="aggregationType" class="form-label">Aggregation</label>
+                                    <select class="form-select" id="aggregationType">
+                                        <option value="none">No Aggregation</option>
+                                        <option value="sum">Sum</option>
+                                        <option value="avg">Average</option>
+                                        <option value="count">Count</option>
+                                        <option value="min">Minimum</option>
+                                        <option value="max">Maximum</option>
+                                    </select>
+                                </div>
+
+                                <!-- Customization Options -->
+                                <div class="accordion" id="customizationAccordion">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#customizationOptions">
+                                                Advanced Options
+                                            </button>
+                                        </h2>
+                                        <div id="customizationOptions" class="accordion-collapse collapse" data-bs-parent="#customizationAccordion">
+                                            <div class="accordion-body">
+                                                <div class="mb-3">
+                                                    <label for="chartTitle" class="form-label">Chart Title</label>
+                                                    <input type="text" class="form-control" id="chartTitle" placeholder="Enter chart title">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="xAxisLabel" class="form-label">X-Axis Label</label>
+                                                    <input type="text" class="form-control" id="xAxisLabel" placeholder="X-Axis Label">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="yAxisLabel" class="form-label">Y-Axis Label</label>
+                                                    <input type="text" class="form-control" id="yAxisLabel" placeholder="Y-Axis Label">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="chartColor" class="form-label">Color</label>
+                                                    <input type="color" class="form-control form-control-color" id="chartColor" value="#4361ee">
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="showLegend" checked>
+                                                    <label class="form-check-label" for="showLegend">Show Legend</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="showGrid" checked>
+                                                    <label class="form-check-label" for="showGrid">Show Grid</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="showDataLabels">
+                                                    <label class="form-check-label" for="showDataLabels">Show Data Labels</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2 mt-3">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-chart-line me-2"></i>Generate Chart
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" id="exportBtn">
+                                        <i class="fas fa-download me-2"></i>Export Chart
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-chart-area me-2"></i>Chart Preview
+                            </h5>
+                        </div>
+                        <div class="card-body d-flex justify-content-center align-items-center">
+                            <div class="w-100 h-100" style="min-height: 400px;">
+                                <canvas id="vizChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Query Results CSS */
+.query-result-container {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.query-code {
+    background-color: #272822;
+    color: #f8f8f2;
+    padding: 15px;
+    border-radius: 5px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.table-responsive {
+    margin-top: 10px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.table {
+    margin-bottom: 0;
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+.table th {
+    background-color: #343a40;
+    color: white;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+}
+
+.table td, .table th {
+    padding: 8px 12px;
+    vertical-align: middle;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.075);
+}
+
+/* Ensure pre blocks don't overflow */
+pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let chart = null;
+let rawData = null;
+
+// Function to populate field selectors
+function populateFieldSelectors(data) {
+    const xAxis = document.getElementById('xAxis');
+    const yAxis = document.getElementById('yAxis');
+    const fields = Object.keys(data[0]);
+    
+    xAxis.innerHTML = '';
+    yAxis.innerHTML = '';
+    
+    fields.forEach(field => {
+        xAxis.innerHTML += `<option value="${field}">${field}</option>`;
+        yAxis.innerHTML += `<option value="${field}">${field}</option>`;
+    });
+    
+    // Select a numeric field by default for y-axis if possible
+    for (let i = 0; i < fields.length; i++) {
+        const field = fields[i];
+        if (typeof data[0][field] === 'number') {
+            yAxis.value = field;
+            break;
+        }
+    }
+}
+
+// Function to aggregate data
+function aggregateData(data, xField, yField, aggregationType) {
+    if (aggregationType === 'none') return data;
+
+    const aggregated = {};
+    data.forEach(item => {
+        const key = item[xField];
+        if (!aggregated[key]) {
+            aggregated[key] = [];
+        }
+        const value = Number(item[yField]) || 0;
+        if (!isNaN(value)) {
+            aggregated[key].push(value);
+        }
+    });
+
+    return Object.entries(aggregated).map(([key, values]) => {
+        let value;
+        switch (aggregationType) {
+            case 'sum':
+                value = values.reduce((a, b) => a + b, 0);
+                break;
+            case 'avg':
+                value = values.reduce((a, b) => a + b, 0) / values.length;
+                break;
+            case 'count':
+                value = values.length;
+                break;
+            case 'min':
+                value = Math.min(...values);
+                break;
+            case 'max':
+                value = Math.max(...values);
+                break;
+            default:
+                value = values.reduce((a, b) => a + b, 0);
+        }
+        return { [xField]: key, [yField]: value };
+    });
+}
+
+// Function to create chart
+function createChart(data, options) {
+    if (chart) {
+        chart.destroy();
+    }
+
+    const aggregatedData = aggregateData(data, options.xField, options.yField, options.aggregationType);
+    
+    const ctx = document.getElementById('vizChart').getContext('2d');
+    const chartData = {
+        labels: aggregatedData.map(item => item[options.xField]),
+        datasets: [{
+            label: options.yAxisLabel || options.yField,
+            data: aggregatedData.map(item => item[options.yField]),
+            backgroundColor: options.color + '80',
+            borderColor: options.color,
+            borderWidth: 1
+        }]
+    };
+    
+    // Configure chart options based on chart type
+    let chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            title: {
+                display: !!options.title,
+                text: options.title,
+                font: {
+                    size: 16,
+                    weight: 'bold'
+                }
+            },
+            legend: {
+                display: options.showLegend
+            },
+            datalabels: {
+                display: options.showDataLabels,
+                color: '#000',
+                anchor: 'end',
+                align: 'top',
+                formatter: (value) => value.toLocaleString()
+            },
+            tooltip: {
+                enabled: true,
+                mode: 'index',
+                intersect: false,
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                titleFont: {
+                    weight: 'bold'
+                }
+            }
+        }
+    };
+    
+    // Add scales for chart types that support them
+    if (!['pie', 'doughnut', 'polarArea'].includes(options.chartType)) {
+        chartOptions.scales = {
+            x: {
+                title: {
+                    display: !!options.xAxisLabel,
+                    text: options.xAxisLabel
+                },
+                grid: {
+                    display: options.showGrid
+                }
+            },
+            y: {
+                title: {
+                    display: !!options.yAxisLabel,
+                    text: options.yAxisLabel
+                },
+                grid: {
+                    display: options.showGrid
+                },
+                beginAtZero: true
+            }
+        };
+    }
+    
+    chart = new Chart(ctx, {
+        type: options.chartType,
+        data: chartData,
+        options: chartOptions,
+        plugins: [ChartDataLabels]
+    });
+    
+    return chart;
+}
+
+// Function to export chart
+function exportChart() {
+    const canvas = document.getElementById('vizChart');
+    const chartType = document.getElementById('chartType').value;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const link = document.createElement('a');
+    
+    // Export as PNG
+    link.download = `chart-${chartType}-${timestamp}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
+
+// Load data and initialize visualization
+document.addEventListener('DOMContentLoaded', function() {
+    // Get the data from the server
+    fetch(window.location.pathname + '/data')
+        .then(response => response.json())
+        .then(data => {
+            rawData = data;
+            populateFieldSelectors(data);
+            
+            // Handle form submission for chart generation
+            document.getElementById('vizForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Show loading indicator
+                document.getElementById('vizChart').style.opacity = 0.5;
+                
+                // Get form values
+                const options = {
+                    chartType: document.getElementById('chartType').value,
+                    xField: document.getElementById('xAxis').value,
+                    yField: document.getElementById('yAxis').value,
+                    aggregationType: document.getElementById('aggregationType').value,
+                    title: document.getElementById('chartTitle').value,
+                    xAxisLabel: document.getElementById('xAxisLabel').value,
+                    yAxisLabel: document.getElementById('yAxisLabel').value,
+                    color: document.getElementById('chartColor').value,
+                    showLegend: document.getElementById('showLegend').checked,
+                    showGrid: document.getElementById('showGrid').checked,
+                    showDataLabels: document.getElementById('showDataLabels').checked
+                };
+                
+                // Create the chart with a small delay to show loading effect
+                setTimeout(() => {
+                    createChart(rawData, options);
+                    document.getElementById('vizChart').style.opacity = 1;
+                }, 200);
+            });
+
+            // Export button event listener
+            document.getElementById('exportBtn').addEventListener('click', exportChart);
+
+            // Initialize with a default chart
+            if (data.length > 0) {
+                const defaultOptions = {
+                    chartType: 'bar',
+                    xField: Object.keys(data[0])[0],
+                    yField: typeof data[0][Object.keys(data[0])[1]] === 'number' ? 
+                            Object.keys(data[0])[1] : Object.keys(data[0])[0],
+                    aggregationType: 'none',
+                    title: '',
+                    xAxisLabel: '',
+                    yAxisLabel: '',
+                    color: '#4361ee',
+                    showLegend: true,
+                    showGrid: true,
+                    showDataLabels: false
+                };
+                
+                // Set default values in the form
+                document.getElementById('xAxis').value = defaultOptions.xField;
+                document.getElementById('yAxis').value = defaultOptions.yField;
+                
+                // Create chart with defaults
+                createChart(rawData, defaultOptions);
+            }
+
+            // Table search functionality
+            document.getElementById('searchInput').addEventListener('keyup', function() {
+                const value = this.value.toLowerCase();
+                document.querySelectorAll('table tbody tr').forEach(row => {
+                    const shouldShow = row.textContent.toLowerCase().indexOf(value) > -1;
+                    row.style.display = shouldShow ? '' : 'none';
+                });
+            });
+
+            // Table sort functionality
+            document.getElementById('sortField').addEventListener('change', sortTable);
+            document.getElementById('sortOrder').addEventListener('change', sortTable);
+            
+            function sortTable() {
+                const columnIndex = document.getElementById('sortField').value;
+                const order = document.getElementById('sortOrder').value;
+                
+                if (!columnIndex) return;
+                
+                const tableBody = document.querySelector('table tbody');
+                const rows = Array.from(tableBody.querySelectorAll('tr'));
+                
+                rows.sort((a, b) => {
+                    const aVal = a.querySelectorAll('td')[columnIndex].textContent.trim();
+                    const bVal = b.querySelectorAll('td')[columnIndex].textContent.trim();
+                    
+                    // Check if values are numeric
+                    const aNum = parseFloat(aVal);
+                    const bNum = parseFloat(bVal);
+                    
+                    if (!isNaN(aNum) && !isNaN(bNum)) {
+                        return order === 'asc' ? aNum - bNum : bNum - aNum;
+                    }
+                    
+                    return order === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                });
+                
+                // Reorder rows in the table
+                rows.forEach(row => {
+                    tableBody.appendChild(row);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading data:', error);
+            document.getElementById('vizChart').innerHTML = 
+                '<div class="alert alert-danger">Error loading data. Please try again later.</div>';
+        });
+});
+</script>
+{% endblock %}
